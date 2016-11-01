@@ -7,14 +7,14 @@ web:
 
   image: nginx:latest
   ports:
-  - "8080:80"
+  - "80:80"
   volumes:
     - ./code:/code
     - ./site.conf:/etc/nginx/conf.d/default.conf
   links:
-    - php-ivg
+    - php
 
-php-ivg:
+php:
   # basic php contianer derived from official docker image
   # ./php_image/dockerfile is used to add GD and MYSQLI extensions
   # ./code contains the html/php/css/etc.
@@ -24,21 +24,3 @@ php-ivg:
   volumes:
     - ./code:/code
     - ./secure:/secure
-  links:
-    - db
-
-db:
-  # basic mysql container using the official mysql docker image
-  # ./mysql contains the persistent data storage for the server
-  # ./database.sql contains the database sctructure
-  # environment variables store mysql access credentials - must match actual server
-  # TODO - define credentials in local environment variables and pass them through
-
-  image: mysql:latest
-  volumes:
-    - ./mysql:/var/lib/mysql
-  environment:
-    - MYSQL_ROOT_PASSWORD=root
-    - MYSQL_DATABASE=image-video-gallery-db
-    - MYSQL_USER=gallery_user
-    - MYSQL_PASSWORD=gallery_pass
