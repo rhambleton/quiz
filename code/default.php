@@ -32,6 +32,9 @@
 <script>
 
  	<!-- set everything up when the page loads -->
+
+ 	var quiz = new Object();
+
  	$(document).ready(function() {
 
 	 	<!-- begin local session -->
@@ -44,49 +47,68 @@
 
 	 		//check if we have a quiz variable
 	 		quiz_id = $_GET('quiz_id');
-	 		if (quiz_id == "undefined") {
+	 		if (quiz_id == undefined) {
 
 	 			//generate a unique ID (unique to this session)
+	 			quiz_id = generate_id();
 
-	 			//read in data from remote storage
-	 			quiz = fetch_remote_data();
-
-	 			//store quiz data in session storage
-
-	 		}
-	 		else
-	 		{
-	 			//check if quiz_id is valid
-
-	 				//if it is - use it to retrieve quiz information
-
-	 					//read in data from local storage
-
-	 				//if it isn't, generate a new one and start over
-
-	 					//generate a unique ID
-
-	 					//read in data from remote storage
-	 					quiz = fetch_remote_data();
-
-	 					//drop content to persistent local storage
+	 			//reload page with new quiz_id
+	 			window.location.href = "default.php?quiz_id="+quiz_id+"&question_id="+question_id;
 
 	 		}
+
+ 			//check if quiz data has already been stored locally
+ 			local_id = "Quiz_"+quiz_id;
+ 			if (sessionStorage.getItem(local_id) === null) {
+					
+ 				//data has not been stored locally so fetch it remotely
+				quiz = fetch_remote_data();
+
+				//store the data locally for later use
+				sessionStorage.setItem(local_id, JSON.stringify(quiz));
+
+			}
+			else
+			{
+
+				//load the data from local storage
+				var quiz_string = sessionStorage.getItem(local_id);
+				quiz = JSON.parse(quiz_string);
+
+			}
 
 
 	 		if(question_id == "last") {
 
 	 			<!-- quiz complete placeholder code -->
 
+	 			//calculate maximum score
+	 			this_question = 1;
+	 			max_score = 0;
+	 			while (this_question <= quiz[0]['question_count'])
+	 			{
+	 				//find maximum score for this question
+	 				possible_scores = quiz[this_question]["weights"];
+					var max = -Infinity, x;
+					for( x in possible_scores) {
+					    if( possible_scores[x] > max) max = possible_scores[x];
+					}
+					max_score += max;
+
+	 				this_question++;
+	 			}
+
 		  		//insert the div that contains the question text
 		  		$("<div></div>").attr( { id : "question_master" , class : "col-xs-5 text-center" } ).appendTo('#title_row');
 		  		
 		  		//insert the <h4> block that contains and formats the actual text
 		  		$("<h4></h4>").attr( { id : "question_text" } ).appendTo('#question_master');
+		  		$("<h5></h5>").attr( { id : "score" } ).appendTo('#question_master');
 		  		$("<a></a>").attr( { href : "default.php?question_id=1" , id : "start_over_link" } ).appendTo('#question_master');
 
 		  		//set the text
-		  		$("#question_text").text("You have finished the quiz. Thanks.");
+		  		$("#question_text").text("You have finished the quiz!");
+		  		$("#score").text("You scored "+quiz[0]["current_score"]+" out of "+max_score);
 		  		$("#start_over_link").text("Try Again");
 
 		  		//insert a spacer to comple the row
@@ -106,7 +128,7 @@
 		  		
 		  		//insert the <h4> block that contains and formats the actual text
 		  		$("<h4></h4>").attr( { id : "question_text" } ).appendTo('#question_master');
-		  		$("<a></a>").attr( { href : "default.php?question_id=1" , id : "start_over_link" } ).appendTo('#question_master');
+		  		$("<a></a>").attr( { href : "default.php?quiz_id="+quiz_id+"&question_id=1" , id : "start_over_link" } ).appendTo('#question_master');
 
 		  		//set the text
 		  		$("#question_text").text("Are you ready to start the quiz?");
@@ -174,7 +196,7 @@
 
 
   	<!-- validate answer from user -->
-  	function validate_answer(option)
+  	function validate_answer(clicked_option)
   	{
   		//build question id
   		question_id = $_GET('question_id');
@@ -186,7 +208,7 @@
 			//build button id
 			button_id = "#btn_option_"+this_option;
 
-  			if(this_option == option) {
+  			if(this_option == clicked_option) {
 
   				//remove default class
   				$(button_id).removeClass("btn-default",0);
@@ -195,7 +217,7 @@
   				switch(quiz[0]["type"]) {
 
 		  			case "knowledge":
-		  				if(option == quiz[question_id]["correct"]) {
+		  				if(quiz[question_id]["weights"][clicked_option] == 1) {
 		  					$(button_id).addClass( "btn-success");
 		  					$(button_id).text("CORRECT!");
 		  				}
@@ -210,6 +232,9 @@
 		  				$(button_id).addClass( "btn-primary");
 		  				break;
 		  		}
+
+  				//update score with the weight of the clicked button
+  				quiz[0]['current_score'] += quiz[question_id]["weights"][clicked_option];
  			}
  			else
  			{
@@ -222,6 +247,7 @@
   		}
 
   		//update score
+		sessionStorage.setItem(local_id, JSON.stringify(quiz));
 
   		//get id of next question
   		next_question = +question_id+1;
@@ -232,7 +258,7 @@
   		}
 
   		window.setTimeout(function() {
-  			window.location.href = "default.php?question_id="+next_question;
+  			window.location.href = "default.php?quiz_id="+quiz_id+"&question_id="+next_question;
   		},200);
   	}
 
@@ -247,17 +273,23 @@
 		return $_PARTS[part];
 	}
 
+	function generate_id() {
+		var now = new Date();
+		id = now.getFullYear().toString() + now.getMonth().toString() + now.getDate().toString() + now.getHours().toString() + now.getMinutes().toString() + now.getSeconds().toString() + now.getMilliseconds();
+		return id;
+	}
+
  	function fetch_remote_data() {
 
  		//place holder function for interfacing with server side quiz storage
 		var new_quiz = {
 
-			0 : {type : "knowledge" , question_count : 5},
-			1 : {text : "What is the airspeed velocity of an unladed swallow?", option_count : 5, 1 : "11 m/s" , 2 : "22 m/s" , 3 : "33 m/s" , 4 : "44 m/s" , 5 : "African or European?", correct : 5},
-			2 : {text : "How will you answer this question?", option_count : 3 , 1 : "Correctly" , 2 : "Incorrectly" , 3 : "I don't know.", correct : 2},
-			3 : {text : "Is this a real question?" , option_count : 2 , 1 : "Yes" , 2 : "No" , correct : 2},
-			4 : {text : "Is this statement false?" , option_count : 2 , 1 : "Yes" , 2 : "No" , correct : 2},
-			5 : {text : "Why?" , option_count : 4, 1 : "Why not?", 2 : "Because." , 3 : "I said so, that's why!", 4 : "Shutup.", correct : 2, 8 : 0}
+			0 : {type : "knowledge" , question_count : 5, title : "An Impossible Logic Quiz", current_score : 0},
+			1 : {text : "What is the airspeed velocity of an unladed swallow?", option_count : 5, 1 : "11 m/s" , 2 : "22 m/s" , 3 : "33 m/s" , 4 : "44 m/s" , 5 : "African or European?", weights : {1:1,2:0,3:0,4:0,5:0}},
+			2 : {text : "How will you answer this question?", option_count : 3 , 1 : "Correctly" , 2 : "Incorrectly" , 3 : "I don't know.", weights : {1:1,2:1,3:0}},
+			3 : {text : "Is this a real question?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:1,2:0}},
+			4 : {text : "Is this statement false?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:0,2:1}},
+			5 : {text : "Why?" , option_count : 4, 1 : "Why not?", 2 : "Because." , 3 : "I said so, that's why!", 4 : "Shutup.", weights : {1:0,2:0,3:0,4:1}}
 		};
 		return new_quiz;
  	} 	
