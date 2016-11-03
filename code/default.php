@@ -87,6 +87,8 @@
 	 			//calculate maximum score
 	 			this_question = 1;
 	 			max_score = 0;
+
+        // Never use while loops ever under any circumstance ever even if Jesus tells you to.
 	 			while (this_question <= quiz[0]['question_count'])
 	 			{
 	 				//find maximum score for this question
