@@ -22,6 +22,9 @@
     
   	<div id="quiz_master" class="container">
   		<div id = "title_row" class="row"></div>
+
+      <div id="question"></div>
+      <div id="answers"></div>
     </div>
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -33,10 +36,76 @@
 
  	// Set everything up when the page loads
 
+  var heyRichard = 'Hi!';
+
+  // If you want to be a super nazi
+  // Self invoking anon function
+  // Closure hell
+  /*
+  ;(function($){
+    var heyRichard = 'Inside function';
+    console.log(heyRichard);
+
+    console.log('Watch!  jQuery!');
+    console.log($);
+    var quiz = 'balls';
+
+  })(jQuery);
+
+  console.log(heyRichard);
+  */
+
  	var quiz = {};
+
+  var QuizNit = function() {
+
+    this.$_GET = function() {
+      console.log('GET VAR');
+    },
+
+    this.quiz = {
+      stuff: 'balls'
+    }, // END :quiz {}
+
+    // This function sets up all of the HTML for the quiz
+    this.setInitialState = function() {
+      var steveQuiz = getQuiz();
+      
+      if(steveQuiz['meta']['progressBar']) {
+        this.setProgressBar();
+      }
+
+      $('#question').html('<div>' + steveQuiz['meta']['title'] + '</div>');
+
+      var steve = {is:'amazing', yes: 'seriously'};
+
+      var answers = '<ul>';
+      for(var i=0; i< steveQuiz.questions[0]['options'].length; i++) {
+        answers += '<li><a data-steve=\''+ JSON.stringify(steve) +'\' data-question_value="' + steveQuiz.questions[0]['options'][i]['value'] + '"class="question_link" href="#">' + steveQuiz.questions[0]['options'][i]['label'] + '</a></li>';
+      }
+      answers += '</ul>';
+
+      $('#answers').html(answers);
+    }, // END : setInitialState()
+
+    this.setEventHandlers = function() {
+      $('a.question_link').on('click',function(){
+        console.log($(this).data('steve')['is']);
+      });
+    }, // END : setEventHandlers()
+
+    this.setProgressBar = function() {
+      $('#question').before('<div id="progress-bar">PROGRESS BAR</div>')
+    }
+
+  } // END : QuizNit
 
  	$(document).ready(function() {
 
+    var Quiznit = new QuizNit();
+
+    Quiznit.setInitialState();
+    Quiznit.setEventHandlers();
 
 
 	 	// begin local session
@@ -101,6 +170,12 @@
 
 	 				this_question++;
 	 			}
+
+          var quizHeader = '';
+
+
+
+
 
 		  		//insert the div that contains the question text
 		  		$("<div id='question_master' class='col-xs-5 text-center'></div>").appendTo('#title_row');
@@ -303,27 +378,12 @@
 		return id;
 	}
 
- 	function fetch_remote_data() {
-
- 		//place holder function for interfacing with server side quiz storage
-		var new_quiz = {
-
-			0 : {type : "knowledge" , question_count : 5, title : "An Impossible Logic Quiz", current_score : 0},
-			1 : {text : "What is the airspeed velocity of an unladed swallow?", option_count : 5, 1 : "11 m/s" , 2 : "22 m/s" , 3 : "33 m/s" , 4 : "44 m/s" , 5 : "African or European?", weights : {1:1,2:0,3:0,4:0,5:0}},
-			2 : {text : "How will you answer this question?", option_count : 3 , 1 : "Correctly" , 2 : "Incorrectly" , 3 : "I don't know.", weights : {1:1,2:1,3:0}},
-			3 : {text : "Is this a real question?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:1,2:0}},
-			4 : {text : "Is this statement false?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:0,2:1}},
-			5 : {text : "Why?" , option_count : 4, 1 : "Why not?", 2 : "Because." , 3 : "I said so, that's why!", 4 : "Shutup.", weights : {1:0,2:0,3:0,4:1}}
-		};
-
-
-		return new_quiz;
- 	} 	
-
-window.theQuiz = {
+  function getQuiz() {
+    return theQuiz = {
       meta: {
         'type': 'knowledge',
-        'title': 'An Impossible Logic Quiz'
+        'title': 'An Impossible Logic Quiz',
+        'progressBar': true
       },
       questions: [
         {
@@ -351,6 +411,26 @@ window.theQuiz = {
         },
       ]
     }
+  }
+
+ 	function fetch_remote_data() {
+
+ 		//place holder function for interfacing with server side quiz storage
+		var new_quiz = {
+
+			0 : {type : "knowledge" , question_count : 5, title : "An Impossible Logic Quiz", current_score : 0},
+			1 : {text : "What is the airspeed velocity of an unladed swallow?", option_count : 5, 1 : "11 m/s" , 2 : "22 m/s" , 3 : "33 m/s" , 4 : "44 m/s" , 5 : "African or European?", weights : {1:1,2:0,3:0,4:0,5:0}},
+			2 : {text : "How will you answer this question?", option_count : 3 , 1 : "Correctly" , 2 : "Incorrectly" , 3 : "I don't know.", weights : {1:1,2:1,3:0}},
+			3 : {text : "Is this a real question?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:1,2:0}},
+			4 : {text : "Is this statement false?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:0,2:1}},
+			5 : {text : "Why?" , option_count : 4, 1 : "Why not?", 2 : "Because." , 3 : "I said so, that's why!", 4 : "Shutup.", weights : {1:0,2:0,3:0,4:1}}
+		};
+
+
+		return new_quiz;
+ 	} 	
+
+
   	</script>
 
   </body>
