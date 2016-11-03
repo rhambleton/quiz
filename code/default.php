@@ -31,13 +31,15 @@
   
 <script>
 
- 	<!-- set everything up when the page loads -->
+ 	// Set everything up when the page loads
 
- 	var quiz = new Object();
+ 	var quiz = {};
 
  	$(document).ready(function() {
 
-	 	<!-- begin local session -->
+
+
+	 	// begin local session
 
 			//check for a question variable, otherwise use default
 			question_id = $_GET('question_id');
@@ -99,8 +101,8 @@
 	 			}
 
 		  		//insert the div that contains the question text
-		  		$("<div></div>").attr( { id : "question_master" , class : "col-xs-5 text-center" } ).appendTo('#title_row');
-		  		
+		  		$("<div id='question_master' class='col-xs-5 text-center'></div>").appendTo('#title_row');
+
 		  		//insert the <h4> block that contains and formats the actual text
 		  		$("<h4></h4>").attr( { id : "question_text" } ).appendTo('#question_master');
 		  		$("<h5></h5>").attr( { id : "score" } ).appendTo('#question_master');
@@ -161,8 +163,26 @@
 
 		  		//loop over all the options and generate rows and divs for them
 		  		this_option = 1;
+
+          var questions = '';
+
+          questions += '<ul>';
+
+          /*
+          for(var i=0; i<window.theQuiz['questions'][0]['options'].length;i++) {
+            console.log(window.theQuiz.questions[0].options[i]);
+
+            questions += '<li>';
+              questions += '<button>' + window.theQuiz.questions[0].options[i]['text'] + '</button>';
+            questions += '</li>';
+          }
+          */
+
+          // $('#questions_container').html(questions);
+
 		  		while(this_option <= quiz[question_id]["option_count"])
 		  		{
+
 		  			//generate javascript id's for the new elements
 		  			row_id = "row_option_"+this_option;
 		  			option_id = "div_option_"+this_option;
@@ -189,6 +209,8 @@
 
 		  			this_option++;
 		  		}
+
+          questions += '</ul>';
 
 			  	<!-- template populated -->
 	  		}
@@ -291,9 +313,42 @@
 			4 : {text : "Is this statement false?" , option_count : 2 , 1 : "Yes" , 2 : "No" , weights : {1:0,2:1}},
 			5 : {text : "Why?" , option_count : 4, 1 : "Why not?", 2 : "Because." , 3 : "I said so, that's why!", 4 : "Shutup.", weights : {1:0,2:0,3:0,4:1}}
 		};
+
+
 		return new_quiz;
  	} 	
 
+window.theQuiz = {
+      meta: {
+        'type': 'knowledge',
+        'title': 'An Impossible Logic Quiz'
+      },
+      questions: [
+        {
+          'text': 'What is the airspeed velocity of an unladed swallow?',
+          'options': [
+            {
+              'label': '11 m/s',
+              'value': 11
+            },
+            {
+              'label': '12 m/s',
+              'value': 12
+            },
+            {
+              'label': '13 m/s',
+              'value': 13
+            }
+          ]
+        },
+        {
+          'text': 'Balls'
+        },
+        {
+          'text': 'In the mouth'
+        },
+      ]
+    }
   	</script>
 
   </body>
